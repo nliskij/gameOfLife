@@ -21,7 +21,7 @@ type Grid = Map.Map (Int, Int) Bool
 prettyPrint :: Grid -> String
 prettyPrint g = intercalate "\n" (chunksOf dim (map (\k -> repr (Map.lookup k g)) (Map.keys g)))
     where dim = maximum (map fst (Map.keys g)) + 1
-          repr (Just True)  = '+'
+          repr (Just True)  = '█'
           repr (Just False) = ' '
           repr Nothing      = ' '
 
@@ -48,13 +48,13 @@ indexedGrid dim = [(x, y) | x <- [0..(dim - 1)], y <- [0..(dim - 1)]]
 parseGrid :: [String] -> Grid
 parseGrid lines = Map.fromList (zip indices isAlive)
         where indices = indexedGrid (length $ head lines)
-              isAlive = map (=='+') (concat lines)
+              isAlive = map (=='█') (concat lines)
 
 initialGrid = parseGrid ["........",
                          "........",
                          "........",
-                         "...+++..",
-                         "....+...",
+                         "...███..",
+                         "....█...",
                          "........",
                          "........",
                          "........"]
