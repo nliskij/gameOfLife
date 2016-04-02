@@ -12,15 +12,14 @@
 --along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import qualified Data.Map.Strict as Map
-import Data.List (intersperse)
+import Data.List (intercalate)
 import Data.List.Split (chunksOf)
 import Control.Concurrent
 
 type Grid = Map.Map (Int, Int) Bool
 
 prettyPrint :: Grid -> String
-prettyPrint g = concat
-    (intersperse "\n" (chunksOf dim (map (\k -> repr (Map.lookup k g)) (Map.keys g))))
+prettyPrint g = intercalate "\n" (chunksOf dim (map (\k -> repr (Map.lookup k g)) (Map.keys g)))
     where dim = maximum (map fst (Map.keys g)) + 1
           repr (Just True)  = '+'
           repr (Just False) = ' '
@@ -39,13 +38,9 @@ spawns :: (Int, Int) -> Grid -> Bool
 spawns c g = numNeighbors c g == 3
 
 evolve :: Grid -> Grid
-evolve g = (foldr (.) id (kill ++ spawn)) g
-    where kill = [(\m -> Map.insert c False m) | c <- (Map.keys g), dies c g]
-          spawn = [(\m -> Map.insert c True m) | c <- (Map.keys g), spawns c g]
-
-spawnCells :: Grid -> Grid
-spawnCells g = (foldr (.) id spawn) g
-    where spawn = [(\m -> Map.insert c True m) | c <- (Map.keys g), spawns c g]
+evolve g = foldr (.) id (kill ++ spawn) g
+    where kill = [Map.insert c False | c <- Map.keys g, dies c g]
+          spawn = [Map.insert c True | c <- Map.keys g, spawns c g]
 
 indexedGrid :: Int -> [(Int, Int)]
 indexedGrid dim = [(x, y) | x <- [0..(dim - 1)], y <- [0..(dim - 1)]]
@@ -53,7 +48,7 @@ indexedGrid dim = [(x, y) | x <- [0..(dim - 1)], y <- [0..(dim - 1)]]
 parseGrid :: [String] -> Grid
 parseGrid lines = Map.fromList (zip indices isAlive)
         where indices = indexedGrid (length $ head lines)
-              isAlive = (map (=='+') (concat lines))
+              isAlive = map (=='+') (concat lines)
 
 initialGrid = parseGrid ["........",
                          "........",
@@ -65,5 +60,5 @@ initialGrid = parseGrid ["........",
                          "........"]
 
 main :: IO ()
-main = mapM_ (\b -> (putStrLn b) >> threadDelay 1000000) boards
-        where boards = map prettyPrint ((iterate evolve initialGrid))
+main = mapM_ (\b -> putStrLn b >> threadDelay 1000000) boards
+        where boards = map prettyPrint (iterate evolve initialGrid)
